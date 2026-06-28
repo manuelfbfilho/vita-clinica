@@ -7,10 +7,12 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-# Cache de dependências Maven (camada separada)
+# Instala Maven
+RUN apk add --no-cache maven
+
+# Cache de dependências (baixa só quando pom.xml mudar)
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 \
-    mvn dependency:go-offline -q 2>/dev/null || true
+RUN mvn dependency:go-offline -q 2>/dev/null || true
 
 # Build do projeto
 COPY src ./src
