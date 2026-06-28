@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmação de Agendamento</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+  .container { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .header { background: #1B4F8A; padding: 32px 40px; text-align: center; }
+  .header h1 { color: #ffffff; font-size: 22px; margin: 0; letter-spacing: -0.3px; }
+  .header p  { color: #B8D4F5; font-size: 14px; margin: 6px 0 0; }
+  .badge { display: inline-block; background: #00897B; color: white; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600; margin: 24px 40px 0; }
+  .body { padding: 24px 40px 32px; }
+  .greeting { font-size: 16px; color: #1a1a2e; margin-bottom: 16px; }
+  .card { background: #f0f7ff; border-left: 4px solid #1B4F8A; border-radius: 6px; padding: 20px 24px; margin: 20px 0; }
+  .row { display: flex; padding: 6px 0; border-bottom: 1px solid #dce8f5; }
+  .row:last-child { border-bottom: none; }
+  .label { font-size: 12px; color: #6b7a99; text-transform: uppercase; letter-spacing: 0.05em; width: 130px; flex-shrink: 0; padding-top: 2px; }
+  .value { font-size: 14px; color: #1a1a2e; font-weight: 500; }
+  .footer { background: #f8fafc; padding: 20px 40px; text-align: center; }
+  .footer p { font-size: 12px; color: #8a94a6; margin: 4px 0; }
+  .btn { display: inline-block; background: #1B4F8A; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; margin: 16px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1 th:text="${clinicaNome}">Vita Clínica</h1>
+    <p>Sistema de Agendamento Online</p>
+  </div>
+  <div style="padding: 0 40px;">
+    <div class="badge">✅ Consulta Confirmada</div>
+  </div>
+  <div class="body">
+    <p class="greeting">Olá, <strong th:text="${pacienteNome}">Paciente</strong>!</p>
+    <p style="color:#475569;font-size:14px;">Seu agendamento foi confirmado com sucesso. Confira os detalhes abaixo:</p>
+    <div class="card">
+      <div class="row">
+        <span class="label">📅 Data</span>
+        <span class="value" th:text="${data}">01/01/2025</span>
+      </div>
+      <div class="row">
+        <span class="label">⏰ Horário</span>
+        <span class="value" th:text="${hora}">09:00</span>
+      </div>
+      <div class="row">
+        <span class="label">👨‍⚕️ Profissional</span>
+        <span class="value" th:text="${profissional}">Dr. Nome</span>
+      </div>
+      <div class="row">
+        <span class="label">🩺 Especialidade</span>
+        <span class="value" th:text="${especialidade}">Cardiologia</span>
+      </div>
+      <div class="row">
+        <span class="label">📍 Atendimento</span>
+        <span class="value" th:text="${tipoAtendimento}">Presencial</span>
+      </div>
+      <div class="row">
+        <span class="label">💳 Pagamento</span>
+        <span class="value" th:text="${formaPagamento}">Particular</span>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <a th:href="${frontendUrl}" class="btn">Ver meus agendamentos</a>
+    </div>
+  </div>
+  <div class="footer">
+    <p><strong th:text="${clinicaNome}">Vita Clínica</strong></p>
+    <p>Este é um email automático. Em caso de dúvidas, entre em contato conosco.</p>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="pt-BR">
+<head><meta charset="UTF-8">
+<title>Cancelamento de Agendamento</title>
+<style>
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; margin: 0; padding: 20px; }
+  .container { max-width: 580px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; }
+  .header { background: #1B4F8A; padding: 32px 40px; text-align: center; }
+  .header h1 { color: #fff; font-size: 22px; margin: 0; }
+  .badge { display: inline-block; background: #DC2626; color: white; border-radius: 20px; padding: 6px 16px; font-size: 13px; font-weight: 600; margin: 24px 40px 0; }
+  .body { padding: 24px 40px 32px; }
+  .card { background: #fff5f5; border-left: 4px solid #DC2626; border-radius: 6px; padding: 20px 24px; margin: 20px 0; }
+  .row { display: flex; padding: 6px 0; border-bottom: 1px solid #fecaca; }
+  .row:last-child { border-bottom: none; }
+  .label { font-size: 12px; color: #6b7a99; text-transform: uppercase; width: 130px; flex-shrink: 0; }
+  .value { font-size: 14px; color: #1a1a2e; font-weight: 500; }
+  .btn { display: inline-block; background: #1B4F8A; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 14px; font-weight: 600; }
+  .footer { background: #f8fafc; padding: 20px 40px; text-align: center; font-size: 12px; color: #8a94a6; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header"><h1 th:text="${clinicaNome}">Vita Clínica</h1></div>
+  <div style="padding: 0 40px;"><div class="badge">❌ Consulta Cancelada</div></div>
+  <div class="body">
+    <p>Olá, <strong th:text="${pacienteNome}">Paciente</strong>!</p>
+    <p style="color:#475569;font-size:14px;">Seu agendamento foi cancelado. Confira os detalhes:</p>
+    <div class="card">
+      <div class="row"><span class="label">📅 Data</span><span class="value" th:text="${data}">01/01/2025</span></div>
+      <div class="row"><span class="label">⏰ Horário</span><span class="value" th:text="${hora}">09:00</span></div>
+      <div class="row"><span class="label">👨‍⚕️ Profissional</span><span class="value" th:text="${profissional}">Dr. Nome</span></div>
+      <div class="row"><span class="label">📝 Motivo</span><span class="value" th:text="${motivo}">—</span></div>
+    </div>
+    <p style="font-size:14px;color:#475569;">Deseja reagendar? Acesse o sistema:</p>
+    <div style="text-align:center;margin-top:16px;">
+      <a th:href="${frontendUrl + '/agendamentos/novo'}" class="btn">Reagendar consulta</a>
+    </div>
+  </div>
+  <div class="footer"><p th:text="${clinicaNome}">Vita Clínica</p><p>Email automático — não responda.</p></div>
+</div>
+</body>
+</html>

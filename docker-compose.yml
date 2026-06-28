@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: vitaclinica-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: vitaclinica
+      POSTGRES_USER: vitaclinica_user
+      POSTGRES_PASSWORD: vitaclinica_pass
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U vitaclinica_user -d vitaclinica"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - vitaclinica-network
+
+  # Descomente após: cd backend && mvn clean package -DskipTests
+  # backend:
+  #   build:
+  #     context: ./backend        ← aponta para o subdiretório
+  #     dockerfile: Dockerfile
+  #   container_name: vitaclinica-backend
+  #   ports:
+  #     - "8080:8080"
+  #   env_file: .env
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   networks:
+  #     - vitaclinica-network
+
+volumes:
+  pgdata:
+    name: vitaclinica-pgdata
+
+networks:
+  vitaclinica-network:
+    name: vitaclinica-network
+    driver: bridge

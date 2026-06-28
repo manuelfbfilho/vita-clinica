@@ -1,0 +1,76 @@
+TESTE PRÁTICO - DESENVOLVEDOR JÚNIOR
+
+> Objetivo
+A proposta é avaliar como você estrutura uma solução simples, aplica regras de negócio, organiza o código e comunica suas decisões técnicas. O sistema deverá funcionar tanto a que o agendamento possa ser realizado tanto pelo paciente, de forma online, quanto por funcionário da clínica, de forma presencial. Mas o sistema estará disponível para acesso sempre online, mesmo sendo para uso dos funcionários, na clínica ou dos pacientes de forma remota, na internet.
+
+O Acesso ao sistema será o mesmo para ambos, a diferença será:
+  1. Na página de acesso, o Login, terá a possibilidade de realizar o login, recuperar senha e realizar o novo cadastro de paciente (cadastro de funcionário só poderá ser realizado por outro funcionário, ou seja, um funcionário deverá estar logado no sistema e acessar no menu a opção de "Cadastrar Funcionário ou Novo Funcionário"). No caso de realizar Login, no momento de preenchimento do Login e senha, se for um paciente o Login será o CPF do paciente e a senha será a senha cadastrada pelo mesmo (atenção que a senha do paciente antes de salvar deverá ser analisada se já existe no BD antes de confirmar e utilizar a regra de criação de senha segura - mínimo de 10 caracteres contendo Letra Maiúscula, Minúscula, número e caracter especial)
+  2. O Funcionário poderá, também, realizar o cadastro do paciente
+  3. A partir do Login identificar se é um paciente ou um funcionário. Caso seja um funcionário terá aceso completo ao sistema e caso seja um paciente, ele poderá, apenas verificar e atualizar seu perfil (seus dados), criar agendamento, cancelar agendamento, verificar/consultar seus agendamentos, imprimir recibos/NF
+
+> Contexto
+Uma clínica precisa de uma API para controlar agendamentos de consultas. Cada agendamento deve possuir:
+  - Paciente
+  - Profissional (Criar uma lista de exemplo, com vários profissionais de várias especialidades)
+  - Data e hora (salvar a data e a hora separados, para facilitar pesquisas, listagens e formatação de apresentação do dado)
+  - Tipo de atendimento (Verificar o que podemos identificar o que seja o Tipo de Atendimento, se quer dizer que o atendimento é "Virtual ou Presencial" ou se "Consulta ou Retorno")
+  - Status do agendamento ()
+  - Funcionário
+
+> O que deve ser desenvolvido:
+Criar uma API REST com Java e Spring Boot para permitir:
+  - Cadastro da Clínica (Nome, endereço, logomarca, Dados de contato - telefone, whatsapp, email)
+  - Cadastrar um paciente (Nome Completo, CPF, Data de Nascimento, Email, Telefone, Endereço - pesquisa do endereço pelo cep e acrescentando outros campos para digitar o número, bairro e complemento - caso não saiba o cep digitar o endereço normalmente e assim identificando automaticamente o cep e digitar o restante dos campos do cadastro) - Dados obrigatórios para preenchimento: Nome Completo, CPF, Email, Telefone e Senha(Para impressão de NF, laudo ou recibo). O Login será o CPF do paciente. No momento do cadastro do paciente, o mesmo também deverá selecionar o plano de saúde, caso tenha, de acordo com os que a clínica trabalha.
+  - Listar pacientes (Ordenando por ordem alfabética, mas oferece uma caixa de pesquisa, para irmos digitando o nome ou CPF do paciente e a listagem já ir listando pacientes de acordo com o texto que for digitado na caixa de pesquisa. Caso não seja encontrado o paciente pesquisado apresentar a opção para cadastrar novo paciente)
+  - Criar um agendamento (Ao entrar na página de agendamento deveremos apresentar os horários disponíveis para cada data. Ao concluir o agendamento, deveremos enviar um email para o paciente apresentando a confirmação do agendamento e apresentando os dados da consulta. Aqui poderemos criar um texto de confirmação, apresentando o nome da clínica, nome do paciente, data e hora da consulta, Profissional (nome do profissional - especialidade)). Funcionário poderá criar agendamento de consulta tanto para paciente quanto para funcionário. No momento da criação do agendamento da consulta deverá informar se o paciente fará a consulta por "plano de saúde" ou particular e se ao final da consulta precisará de NF/Recibo referente a consulta (Caso o paciente realize a consulta de forma como "particular" mas precisará do recibo/NF para solicitar reembolso com o Plano de saúde dele) Perguntar se o paciente deseja que o recibo seja impresso ou pose ser enviado para o email dele, se for para enviar para o email, o funcionário poderá enviar na hora.
+  - Listar agendamentos (Podendo utilizar filtros para ordenar a lista de acordo com a preferência - por data, hora, profissional, Tipo (Consulta, Retorno ou Encaixe) e outras formas que acharmos interessante ou importante)
+  - Cancelar um agendamento (Como para o cancelamento deverá apresentar o motivo, além do motivo, também os registros do paciente, profissional e quem realizou o cancelamento do agendamento, se o paciente ou o profissional. No momento do cancelamento já perguntar se deseja já realizar um novo agendamento para outra data, se sim, já abrir a página de agendamento e realizar o agendamento, se não, cancelar o agendamento, salvar os dados de confirmação de cancelamento, enviar um email de confirmação de cancelamento de agendamento e fechar)
+  - Cadastrar profissional (Nome do profissional, Especialidade, CRM, Valor da Consulta) - Criar uma tabela/lista preenchida com alguns exemplos fictícios de profissionais, e mantendo a possibilidade de cadastrar um novo profissional e alterar ou excluir existente.
+  - Cadastrar Funcionário (Nome do Funcionário, CPF e Senha - Login será o CPF do funcionário) - Criar uma tabela/lista preenchida com alguns exemplos fictícios de funcionários, e mantendo a possibilidade de cadastrar um novo funcionário e alterar ou excluir existente.
+
+Obs.: Em todos os registros de cadastros deverá ter o ID, pois servirá para poder conseguir realizar relacionamento entre tabelas.
+
+> Regras obrigatórias:
+  - Um profissional não pode ter dois agendamentos no mesmo horário.
+  - Um paciente não pode ter dois agendamentos no mesmo horário.
+  - Não permitir criar agendamento com data/hora no passado e nem fora do horário de atendimento (nem antes e nem depois do horário e nem em dia que não tenha atendimento).
+  - O cancelamento deve registrar motivo.
+  - Ao cancelar um agendamento, o status deve mudar para `CANCELADO` e o registro deve ser mantido. E a data/hora que o paciente havia feito o agendamento, deve voltar a ficar disponível no sistema.
+  - A listagem de agendamentos deve permitir filtro por paciente, profissional ou status.
+  - As disponibilidades para agendamento de consulta deverá ficar disponível nos seguintes termos:
+    * Segunda-feira a Sexta-feira - das 07:00h às 20:00h
+    * Sábado - das 08:00h às 13:00h
+    * Tempo estimado para cada consulta será de 30 minutos (00h:30m), com um intervalo de 10 minutos entre cada consulta
+    * Permitir que usuários do sistema possam selecionar dia e/ou horários que ficarão indisponíveis, por algum motivo específico da clínica (o motivo e qual usuário realizaou a ação deverão ficar registrados)
+  - Criar validaçãoes tanto devido a erros quanto ao preenchimento correto dos dados nos cadastros (características de senhas, cpfs, emails, telefone, cep, CRM estejam corretos)
+
+> Requisitos técnicos mínimos
+  - Java com Spring Boot
+  - API REST retornando JSON
+  - Persistência em banco relacional
+  - Pelo menos 1 teste automatizado cobrindo regra de negócio (Aqui tentaremos fazer o máximo de testes possíveis)
+  - Tratamento básico de erros (O quanto mais tratamento de erros será melhor para o sistema)
+  - Projeto versionado no GitHub
+  - Documentação técnica completa e totalmente muito bem explicada detalhadamente, sobre cada funcionalidade, como executar, tecnologia do sistema e como funciona o sistema.
+
+> Diferenciais:
+  - Uso de boas práticas de modelagem (em todo o código e documentação)
+  - Validações consistentes
+  - Estrutura limpa e fácil de entender
+  - Testes adicionais
+  - Documentação de endpoints
+  - Uso de Angular ou outra interface simples para consumo da API
+  - Uso de Oracle ou demonstração de compatibilidade com Oracle
+
+> Entregáveis:
+  - Link do repositório
+  - Arquivo `README.md` com instruções para executar
+  - Arquivo `DECISOES.md` com respostas curtas para:
+    1. Quais foram as principais decisões técnicas?
+    2. O que você priorizou e o que ficou de fora?
+    3. Se utilizou IA, em quais partes e como validou o resultado?
+
+> Combinados importantes:
+  - Não esperamos um sistema completo. Queremos ver sua forma de pensar.
+  - Caso não consiga finalizar tudo, envie mesmo assim com observações claras.
+  - Faca commits com mensagens que mostrem a evolução da implementação.

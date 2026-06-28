@@ -1,0 +1,47 @@
+# ═══════════════════════════════════════════════
+# PROFILE: oracle
+# Compatibilidade com Oracle XE / Oracle Cloud
+# Ativo com: --spring.profiles.active=oracle
+#
+# Pré-requisitos:
+#   - ojdbc11 no classpath (já incluído no pom.xml)
+#   - Oracle XE ou Oracle Cloud Autonomous DB
+#   - Variáveis de ambiente configuradas abaixo
+# ═══════════════════════════════════════════════
+spring:
+  datasource:
+    url: ${ORACLE_URL:jdbc:oracle:thin:@localhost:1521/XEPDB1}
+    username: ${ORACLE_USERNAME:vitaclinica}
+    password: ${ORACLE_PASSWORD:vitaclinica_pass}
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      connection-test-query: SELECT 1 FROM DUAL
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.OracleDialect
+        # Oracle usa sequências próprias, compatível com @GeneratedValue(SEQUENCE)
+        id:
+          new_generator_mappings: true
+
+  flyway:
+    locations:
+      - classpath:db/migration/oracle
+    # Oracle não suporta DDL transacional da mesma forma
+    out-of-order: false
+
+logging:
+  level:
+    com.vitaclinica: INFO
+    oracle.jdbc: WARN
+
+# NOTA TÉCNICA:
+# O projeto foi desenvolvido primariamente para PostgreSQL mas segue
+# práticas de SQL padrão (sem funções específicas de banco):
+#   ✅ Sem uso de SERIAL (usa BIGSERIAL/SEQUENCE)
+#   ✅ Sem funções específicas PostgreSQL nos critérios de busca
+#   ✅ Sem tipos específicos como JSONB nas entidades principais
+#   ✅ Queries HQL/JPQL na maioria das operações
+#   ✅ Native queries documentadas com alternativa Oracle nos comentários
+#   ✅ Partial indexes (WHERE clause) têm equivalente em Oracle (virtual columns)
