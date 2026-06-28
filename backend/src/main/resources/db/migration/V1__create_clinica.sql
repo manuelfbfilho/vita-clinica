@@ -15,7 +15,7 @@ CREATE TABLE clinica (
     complemento VARCHAR(100),
     bairro      VARCHAR(100),
     cidade      VARCHAR(100),
-    uf          VARCHAR(2),
+    uf          CHAR(2),
     ativo       BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMP    NOT NULL DEFAULT NOW(),
     updated_at  TIMESTAMP    NOT NULL DEFAULT NOW()

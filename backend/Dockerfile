@@ -7,12 +7,10 @@
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-# Instala Maven
-RUN apk add --no-cache maven
-
-# Cache de dependências (baixa só quando pom.xml mudar)
+# Cache de dependências Maven (camada separada)
 COPY pom.xml .
-RUN mvn dependency:go-offline -q 2>/dev/null || true
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -q 2>/dev/null || true
 
 # Build do projeto
 COPY src ./src
@@ -36,4 +34,3 @@ ENTRYPOINT ["java", \
   "-XX:MaxRAMPercentage=75.0", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-jar", "app.jar"]
-

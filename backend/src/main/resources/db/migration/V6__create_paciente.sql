@@ -17,7 +17,7 @@ CREATE TABLE paciente (
     complemento      VARCHAR(100),
     bairro           VARCHAR(100),
     cidade           VARCHAR(100),
-    uf               VARCHAR(2),
+    uf               CHAR(2),
     -- Relacionamentos
     plano_saude_id   BIGINT       REFERENCES plano_saude(id),
     ativo            BOOLEAN      NOT NULL DEFAULT TRUE,
