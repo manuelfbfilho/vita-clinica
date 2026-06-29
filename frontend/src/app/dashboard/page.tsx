@@ -4,150 +4,185 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { agendamentoApi } from "@/lib/api";
 import type { Agendamento } from "@/types";
+import PanelNovoAgendamento from "@/components/panels/PanelNovoAgendamento";
+import PanelAgendamentos from "@/components/panels/PanelAgendamentos";
+import PanelPerfil from "@/components/panels/PanelPerfil";
+import PanelPacientes from "@/components/panels/PanelPacientes";
+import PanelProfissionais from "@/components/panels/PanelProfissionais";
 
-const STATUS_COLORS: Record<string, string> = {
-  AGENDADO: "bg-blue-50 text-blue-700 border-blue-200",
-  CONFIRMADO: "bg-green-50 text-green-700 border-green-200",
-  CANCELADO: "bg-red-50 text-red-600 border-red-200",
-  CONCLUIDO: "bg-slate-50 text-slate-600 border-slate-200",
-  NAO_COMPARECEU: "bg-orange-50 text-orange-700 border-orange-200",
-};
-const STATUS_LABEL: Record<string, string> = {
-  AGENDADO: "Agendado", CONFIRMADO: "Confirmado", CANCELADO: "Cancelado",
-  CONCLUIDO: "Concluído", NAO_COMPARECEU: "Não Compareceu",
-};
+type View = "inicio" | "novo" | "agendamentos" | "perfil" | "pacientes" | "profissionais";
+
+interface MenuItem { id: View; emoji: string; title: string; desc: string; }
+
+const MENU_PACIENTE: MenuItem[] = [
+  { id: "novo",          emoji: "📅", title: "Nova Consulta",      desc: "Agendar com um profissional" },
+  { id: "agendamentos",  emoji: "📋", title: "Meus Agendamentos",  desc: "Ver e cancelar consultas" },
+  { id: "perfil",        emoji: "👤", title: "Meu Perfil",         desc: "Atualizar meus dados" },
+];
+
+const MENU_FUNCIONARIO: MenuItem[] = [
+  { id: "novo",          emoji: "📅", title: "Novo Agendamento",   desc: "Criar consulta para paciente" },
+  { id: "agendamentos",  emoji: "📋", title: "Agendamentos",       desc: "Ver e cancelar consultas" },
+  { id: "pacientes",     emoji: "👥", title: "Pacientes",          desc: "Buscar e cadastrar" },
+];
+
+const MENU_ADMIN: MenuItem[] = [
+  ...MENU_FUNCIONARIO,
+  { id: "profissionais", emoji: "👨‍⚕️", title: "Profissionais",   desc: "Cadastrar médicos" },
+];
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { nome, role, userId, logout, isFuncionario } = useAuthStore();
-  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { nome, role, userId, logout, isFuncionario, isAdmin } = useAuthStore();
+  const [mounted, setMounted] = useState(false);
+  const [view, setView] = useState<View>("inicio");
+  const [proximos, setProximos] = useState<Agendamento[]>([]);
+  const [loadingAg, setLoadingAg] = useState(true);
 
+  useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
+    if (!mounted) return;
     if (!userId) { router.push("/login"); return; }
-    loadAgendamentos();
-  }, [userId]);
+    loadProximos();
+  }, [mounted, userId]);
 
-  async function loadAgendamentos() {
+  async function loadProximos() {
+    setLoadingAg(true);
     try {
       const res = isFuncionario()
-        ? await agendamentoApi.agendaDia()
+        ? await agendamentoApi.proximos()
         : await agendamentoApi.meus();
       const data = isFuncionario() ? res.data.data : res.data.data?.content;
-      setAgendamentos(Array.isArray(data) ? data : []);
-    } catch { setAgendamentos([]); }
-    finally { setLoading(false); }
+      setProximos(Array.isArray(data) ? data : []);
+    } catch { setProximos([]); }
+    finally { setLoadingAg(false); }
   }
 
-  function formatDate(d: string) {
-    return new Date(d + "T00:00:00").toLocaleDateString("pt-BR");
-  }
+  function handleLogout() { logout(); router.push("/login"); }
 
-  const titulo = isFuncionario() ? "Agenda de Hoje" : "Meus Agendamentos";
+  if (!mounted) return <div className="min-h-screen bg-slate-50 flex items-center justify-center"><div className="text-slate-400 text-sm">Carregando...</div></div>;
+
+  const func = isFuncionario();
+  const menu = isAdmin() ? MENU_ADMIN : func ? MENU_FUNCIONARIO : MENU_PACIENTE;
+  const roleLabel = role === "ROLE_ADMIN" ? "Administrador" : func ? "Funcionário" : "Paciente";
+  const roleColor = role === "ROLE_ADMIN" ? "bg-purple-100 text-purple-700" : func ? "bg-blue-100 text-blue-700" : "bg-green-100 text-green-700";
+
+  // O card de agendamentos some quando está na view de agendamentos
+  const showAgendamentosCard = view !== "agendamentos";
 
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <span className="text-white text-xs font-bold">V</span>
-            </div>
-            <div>
+      <header className="bg-white border-b border-slate-100 shadow-sm sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+          <button onClick={() => setView("inicio")} className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center"><span className="text-white text-xs font-bold">V</span></div>
+            <div className="text-left">
               <span className="font-semibold text-slate-800 text-sm">Vita Clínica</span>
-              <span className="ml-2 text-xs text-slate-400 hidden sm:inline">
-                {role === "ROLE_ADMIN" ? "Administrador" : role === "ROLE_FUNCIONARIO" ? "Funcionário" : "Paciente"}
-              </span>
+              <span className={`ml-2 text-xs px-2 py-0.5 rounded-full font-medium ${roleColor}`}>{roleLabel}</span>
             </div>
-          </div>
+          </button>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-600 hidden sm:block">Olá, {nome?.split(" ")[0]}</span>
-            <button onClick={() => { logout(); router.push("/login"); }}
-              className="text-sm text-slate-500 hover:text-red-600 transition px-3 py-1.5 rounded-lg hover:bg-red-50">
-              Sair
-            </button>
+            <span className="text-sm text-slate-600 hidden sm:block">Olá, <strong>{nome?.split(" ")[0]}</strong></span>
+            <button onClick={handleLogout} className="text-sm text-slate-400 hover:text-red-600 transition px-3 py-1.5 rounded-lg hover:bg-red-50">Sair</button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8">
-        {/* Quick actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <button onClick={() => router.push("/agendamentos/novo")}
-            className="bg-primary text-white rounded-xl p-5 text-left hover:bg-primary-light transition shadow-sm">
-            <div className="text-xl mb-2">📅</div>
-            <div className="font-medium text-sm">Novo Agendamento</div>
-            <div className="text-blue-200 text-xs mt-1">Marcar uma consulta</div>
-          </button>
-          <button onClick={() => router.push("/agendamentos")}
-            className="bg-white border border-slate-100 rounded-xl p-5 text-left hover:border-primary/30 hover:shadow-sm transition">
-            <div className="text-xl mb-2">📋</div>
-            <div className="font-medium text-sm text-slate-800">Ver Agendamentos</div>
-            <div className="text-slate-400 text-xs mt-1">Histórico completo</div>
-          </button>
-          {!isFuncionario() && (
-            <button onClick={() => router.push("/perfil")}
-              className="bg-white border border-slate-100 rounded-xl p-5 text-left hover:border-primary/30 hover:shadow-sm transition">
-              <div className="text-xl mb-2">👤</div>
-              <div className="font-medium text-sm text-slate-800">Meu Perfil</div>
-              <div className="text-slate-400 text-xs mt-1">Dados pessoais</div>
-            </button>
-          )}
-          {isFuncionario() && (
-            <button onClick={() => router.push("/pacientes")}
-              className="bg-white border border-slate-100 rounded-xl p-5 text-left hover:border-primary/30 hover:shadow-sm transition">
-              <div className="text-xl mb-2">👥</div>
-              <div className="font-medium text-sm text-slate-800">Pacientes</div>
-              <div className="text-slate-400 text-xs mt-1">Gerenciar cadastros</div>
-            </button>
-          )}
-        </div>
+      {/* Layout 3 zonas */}
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        <div className="grid grid-cols-12 gap-5">
 
-        {/* Agendamentos */}
-        <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-800">{titulo}</h2>
-            <button onClick={loadAgendamentos} className="text-xs text-primary hover:underline">Atualizar</button>
-          </div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-16 text-slate-400">Carregando...</div>
-          ) : agendamentos.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="text-4xl mb-3">📭</div>
-              <p className="text-slate-500 text-sm">Nenhum agendamento encontrado.</p>
-              <button onClick={() => router.push("/agendamentos/novo")}
-                className="mt-4 text-sm text-primary font-medium hover:underline">
-                Agendar uma consulta
+          {/* ZONA 1: Cards de menu (esquerda) */}
+          <aside className="col-span-12 lg:col-span-3 space-y-3">
+            {menu.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setView(item.id)}
+                className={`w-full text-left rounded-xl p-4 transition shadow-sm ${
+                  view === item.id
+                    ? "bg-primary text-white"
+                    : "bg-white border border-slate-100 hover:border-primary/30 hover:shadow-md"
+                }`}
+              >
+                <div className="text-xl mb-1">{item.emoji}</div>
+                <div className={`font-semibold text-sm ${view === item.id ? "text-white" : "text-slate-800"}`}>{item.title}</div>
+                <div className={`text-xs mt-0.5 ${view === item.id ? "text-blue-100" : "text-slate-400"}`}>{item.desc}</div>
               </button>
-            </div>
-          ) : (
-            <div className="divide-y divide-slate-50">
-              {agendamentos.map((a) => (
-                <div key={a.id} className="px-6 py-4 hover:bg-slate-50 transition">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-medium text-slate-800 text-sm truncate">
-                          {isFuncionario() ? a.pacienteNome : a.profissionalNome}
-                        </span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${STATUS_COLORS[a.status] || ""}`}>
-                          {STATUS_LABEL[a.status] || a.status}
-                        </span>
-                      </div>
-                      <div className="text-xs text-slate-500">
-                        {a.especialidadeNome} · {formatDate(a.dataConsulta)} às {a.horaConsulta?.substring(0, 5)}
-                        {" · "}{a.tipoAtendimento === "PRESENCIAL" ? "Presencial" : "Virtual"}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-xs text-slate-400">{a.tipoConsulta}</div>
-                    </div>
+            ))}
+          </aside>
+
+          {/* ZONA 2: Conteúdo (centro) */}
+          <section className={`col-span-12 ${showAgendamentosCard ? "lg:col-span-6" : "lg:col-span-9"}`}>
+            {view === "inicio" && (
+              <div className="bg-white rounded-2xl border border-slate-100 p-8">
+                <h2 className="text-xl font-semibold text-slate-800 mb-3">
+                  {func ? `Bem-vindo, ${nome?.split(" ")[0]}! 🏥` : `Olá, ${nome?.split(" ")[0]}! 👋`}
+                </h2>
+                {func ? (
+                  <div className="space-y-3 text-sm text-slate-600">
+                    <p>Este é o painel de gestão da <strong>Vita Clínica</strong>. Use os cards à esquerda para navegar:</p>
+                    <ul className="space-y-2 mt-2">
+                      <li className="flex gap-2"><span>📅</span><span><strong>Novo Agendamento</strong> — criar consultas para pacientes, funcionários ou para você.</span></li>
+                      <li className="flex gap-2"><span>📋</span><span><strong>Agendamentos</strong> — visualizar, filtrar e cancelar consultas.</span></li>
+                      <li className="flex gap-2"><span>👥</span><span><strong>Pacientes</strong> — buscar e cadastrar pacientes.</span></li>
+                      {isAdmin() && <li className="flex gap-2"><span>👨‍⚕️</span><span><strong>Profissionais</strong> — cadastrar médicos e especialidades.</span></li>}
+                    </ul>
+                    <p className="mt-3 text-slate-500">À direita você acompanha os <strong>próximos agendamentos</strong> da clínica.</p>
                   </div>
+                ) : (
+                  <div className="space-y-3 text-sm text-slate-600">
+                    <p>Bem-vindo à <strong>Vita Clínica</strong>! Cuide da sua saúde com praticidade. Use os cards à esquerda:</p>
+                    <ul className="space-y-2 mt-2">
+                      <li className="flex gap-2"><span>📅</span><span><strong>Nova Consulta</strong> — agende com o profissional que precisar.</span></li>
+                      <li className="flex gap-2"><span>📋</span><span><strong>Meus Agendamentos</strong> — veja seu histórico e cancele consultas.</span></li>
+                      <li className="flex gap-2"><span>👤</span><span><strong>Meu Perfil</strong> — mantenha seus dados atualizados.</span></li>
+                    </ul>
+                    <p className="mt-3 text-slate-500">À direita você vê suas <strong>próximas consultas</strong>.</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {view === "novo" && userId && <PanelNovoAgendamento userId={userId} isFuncionario={func} onSucesso={() => { setView("agendamentos"); loadProximos(); }} />}
+            {view === "agendamentos" && <PanelAgendamentos isFuncionario={func} />}
+            {view === "perfil" && userId && <PanelPerfil userId={userId} />}
+            {view === "pacientes" && <PanelPacientes />}
+            {view === "profissionais" && <PanelProfissionais />}
+          </section>
+
+          {/* ZONA 3: Card de próximos agendamentos (direita, fixo) */}
+          {showAgendamentosCard && (
+            <aside className="col-span-12 lg:col-span-3">
+              <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden sticky top-20">
+                <div className="px-4 py-3 border-b border-slate-50 bg-slate-50/50">
+                  <h3 className="font-semibold text-slate-700 text-xs uppercase tracking-wide">
+                    {func ? "📋 Próximos da Clínica" : "📅 Minhas Consultas"}
+                  </h3>
                 </div>
-              ))}
-            </div>
+                {loadingAg ? (
+                  <div className="py-10 text-center text-slate-400 text-xs">Carregando...</div>
+                ) : proximos.length === 0 ? (
+                  <div className="py-10 text-center px-4">
+                    <div className="text-3xl mb-2">📭</div>
+                    <p className="text-slate-400 text-xs">Nenhum agendamento futuro.</p>
+                  </div>
+                ) : (
+                  <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto">
+                    {proximos.filter(a => a.status === "AGENDADO" || a.status === "CONFIRMADO").map((a) => (
+                      <div key={a.id} className="px-4 py-3">
+                        <div className="text-sm font-medium text-slate-800 truncate">
+                          {func ? a.pacienteNome : a.profissionalNome}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">{a.especialidadeNome}</div>
+                        <div className="text-xs text-primary font-medium mt-1">
+                          {new Date(a.dataConsulta + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "short" })} às {a.horaConsulta?.substring(0, 5)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </aside>
           )}
         </div>
       </main>

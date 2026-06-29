@@ -1,13 +1,11 @@
 # ═══════════════════════════════════════════════
 # Vita Clínica — Dockerfile multi-stage
-# Stage 1: Build com Maven
-# Stage 2: Runtime mínimo com JRE Alpine
 # ═══════════════════════════════════════════════
 
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-# Instala Maven
+# Instala Maven (não vem na imagem temurin)
 RUN apk add --no-cache maven
 
 # Cache de dependências (baixa só quando pom.xml mudar)
@@ -36,4 +34,3 @@ ENTRYPOINT ["java", \
   "-XX:MaxRAMPercentage=75.0", \
   "-Djava.security.egd=file:/dev/./urandom", \
   "-jar", "app.jar"]
-

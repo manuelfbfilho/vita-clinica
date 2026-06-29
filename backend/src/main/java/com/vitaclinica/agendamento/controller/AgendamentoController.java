@@ -80,6 +80,13 @@ public class AgendamentoController {
         return ApiResponse.ok(agendamentoService.agendaDia(data != null ? data : LocalDate.now()));
     }
 
+    @GetMapping("/proximos")
+    @SecurityRequirement(name = "bearerAuth")
+    @Operation(summary = "Próximos agendamentos", description = "Agendamentos futuros para dashboard de funcionário/admin.")
+    public ApiResponse<List<AgendamentoResponse>> proximos() {
+        return ApiResponse.ok(agendamentoService.proximosAgendamentos());
+    }
+
     @GetMapping("/{id}")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Buscar agendamento por ID")

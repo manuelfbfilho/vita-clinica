@@ -56,4 +56,16 @@ public interface AgendamentoRepository extends JpaRepository<Agendamento, Long> 
         ORDER BY a.horaConsulta ASC
         """)
     List<Agendamento> findAgendaDia(LocalDate data);
+
+    /** Próximos agendamentos futuros — dashboard de funcionário/admin */
+    @Query("""
+        SELECT a FROM Agendamento a
+        JOIN FETCH a.paciente
+        JOIN FETCH a.profissional p
+        JOIN FETCH p.especialidade
+        WHERE a.status IN ('AGENDADO','CONFIRMADO')
+          AND (a.dataConsulta > :hoje OR (a.dataConsulta = :hoje AND a.horaConsulta >= :horaAtual))
+        ORDER BY a.dataConsulta ASC, a.horaConsulta ASC
+        """)
+    List<Agendamento> findProximosAgendamentos(LocalDate hoje, LocalTime horaAtual, Pageable pageable);
 }

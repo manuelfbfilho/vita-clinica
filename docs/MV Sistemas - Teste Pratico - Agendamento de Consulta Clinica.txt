@@ -41,8 +41,8 @@ Obs.: Em todos os registros de cadastros deverá ter o ID, pois servirá para po
     * Segunda-feira a Sexta-feira - das 07:00h às 20:00h
     * Sábado - das 08:00h às 13:00h
     * Tempo estimado para cada consulta será de 30 minutos (00h:30m), com um intervalo de 10 minutos entre cada consulta
-    * Permitir que usuários do sistema possam selecionar dia e/ou horários que ficarão indisponíveis, por algum motivo específico da clínica (o motivo e qual usuário realizaou a ação deverão ficar registrados)
-  - Criar validaçãoes tanto devido a erros quanto ao preenchimento correto dos dados nos cadastros (características de senhas, cpfs, emails, telefone, cep, CRM estejam corretos)
+    * Permitir que usuários do sistema possam selecionar dia e/ou horários que ficarão indisponíveis, por algum motivo específico da clínica (o motivo e qual usuário realizou a ação deverão ficar registrados)
+  - Criar validações tanto devido a erros quanto ao preenchimento correto dos dados nos cadastros (características de senhas, cpfs, emails, telefone, cep, CRM estejam corretos)
 
 > Requisitos técnicos mínimos
   - Java com Spring Boot

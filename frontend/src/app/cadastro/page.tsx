@@ -1,7 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { pacienteApi, cepApi } from "@/lib/api";
+import { pacienteApi, cepApi, authApi } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import type { Role } from "@/types";
 
 function formatCpf(v: string) {
   const n = v.replace(/\D/g, "").slice(0, 11);
@@ -16,6 +18,7 @@ function formatTel(v: string) {
 
 export default function CadastroPage() {
   const router = useRouter();
+  const setAuth = useAuthStore((s) => s.setAuth);
   const [form, setForm] = useState({ nomeCompleto:"", cpf:"", email:"", telefone:"", senha:"", cep:"", logradouro:"", numero:"", bairro:"", cidade:"", uf:"" });
   const [erro, setErro] = useState("");
   const [ok, setOk] = useState(false);
@@ -35,9 +38,19 @@ export default function CadastroPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setErro(""); setLoading(true);
+    const cpfFormatado = form.cpf.replace(/\D/g,"").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4");
     try {
-      await pacienteApi.cadastrar({ ...form, cpf: form.cpf.replace(/\D/g,"").replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,"$1.$2.$3-$4") });
-      setOk(true);
+      await pacienteApi.cadastrar({ ...form, cpf: cpfFormatado });
+      // Login automático após cadastro bem-sucedido → vai direto pro dashboard
+      try {
+        const res = await authApi.login(cpfFormatado, form.senha);
+        const { data } = res.data;
+        setAuth({ token: data.token, role: data.role as Role, userId: data.userId, nome: data.nome, cpf: data.cpf });
+        router.push("/dashboard");
+      } catch {
+        // Se o login automático falhar, mostra tela de sucesso pra logar manualmente
+        setOk(true);
+      }
     } catch (err: unknown) {
       const d = (err as { response?: { data?: { mensagem?: string; campos?: Record<string, string> } } })?.response?.data;
       if (d?.campos) setErro(Object.values(d.campos).join(" · "));
