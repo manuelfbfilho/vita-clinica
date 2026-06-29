@@ -4,11 +4,6 @@
 # Ou: SPRING_PROFILES_ACTIVE=dev
 # ═══════════════════════════════════════════════
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5434/vita-clinica
-    username: vitaclinica_user
-    password: vitaclinica_pass
-
   jpa:
     show-sql: true
     properties:

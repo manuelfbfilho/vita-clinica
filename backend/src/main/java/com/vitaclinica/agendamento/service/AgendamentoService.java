@@ -99,6 +99,15 @@ public class AgendamentoService {
         return agendamentoRepo.findAgendaDia(data).stream().map(mapper::toResponse).toList();
     }
 
+    /** Próximos agendamentos futuros para dashboard de funcionário/admin */
+    public List<AgendamentoResponse> proximosAgendamentos() {
+        var hoje = LocalDate.now();
+        var agora = LocalTime.now();
+        var pageable = org.springframework.data.domain.PageRequest.of(0, 20);
+        return agendamentoRepo.findProximosAgendamentos(hoje, agora, pageable)
+                .stream().map(mapper::toResponse).toList();
+    }
+
     public AgendamentoResponse buscarPorId(Long id) {
         return mapper.toResponse(buscarEntidade(id));
     }

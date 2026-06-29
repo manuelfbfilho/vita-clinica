@@ -1,14 +1,24 @@
+# ═══════════════════════════════════════════════
+# Vita Clínica — Dockerfile multi-stage
+# Stage 1: Build com Maven
+# Stage 2: Runtime mínimo com JRE Alpine
+# ═══════════════════════════════════════════════
+
 FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
 
-RUN apk add --no-cache maven
-
+# Cache de dependências Maven (camada separada)
 COPY pom.xml .
-RUN mvn dependency:go-offline -q 2>/dev/null || true
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn dependency:go-offline -q 2>/dev/null || true
 
+# Build do projeto
 COPY src ./src
 RUN mvn clean package -DskipTests -q
 
+# ═══════════════════════════════════════════════
+# Stage 2: Runtime mínimo
+# ═══════════════════════════════════════════════
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
