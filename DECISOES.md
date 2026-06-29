@@ -133,6 +133,8 @@ Esta separação permite que regras de negócio finas (ex: paciente só acessa p
 
 ## 3. Quais foram os principais desafios técnicos e como você os resolveu?
 
+### Principal: 
+
 ### Desafio 1: Regras de conflito com cancelamento/reagendamento
 
 **Problema:** Um `UNIQUE CONSTRAINT` convencional em `(profissional_id, data_consulta, hora_consulta)` impediria o reagendamento após cancelamento — o registro cancelado ainda existiria na tabela (mantemos para auditoria).
@@ -173,4 +175,4 @@ Jwts.parser()
 
 ---
 
-*Manuel Fernandes Bittencourt Filho — manuelfbfilho@gmail.com*
+*Manuel Fernandes Baptista Filho — manuelfbfilho@gmail.com*
