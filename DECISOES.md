@@ -4,7 +4,7 @@
 
 ---
 
-## 1. Qual sua abordagem arquitetural para o controle de horários e prevenção de conflitos?
+## 1. Quais foram as principais decisões técnicas?
 
 ### Abordagem: Geração Dinâmica de Slots + Validação em Camadas
 
@@ -59,81 +59,38 @@ A **partial unique index** (não um UNIQUE constraint convencional) é a decisã
 
 ---
 
-## 2. Como você implementou a autenticação e autorização?
+## 2. O que você priorizou e o que ficou de fora?
 
-### Autenticação: JWT Stateless com Login Unificado
+### Prioridades: 
 
-A clínica tem três tipos de usuário (Paciente, Funcionário, Admin) em **tabelas separadas** (`paciente` e `funcionario`), mas o sistema oferece **um único endpoint de login** (`POST /auth/login`).
+De todo o projeto, com os acréscimos que idealizei para desenvolvimento desse sitema agenamento de consulta, o que foi colocado como prioridades as funcionalidades indicadas no documento enviado, onde indica **"O que deve ser desenvolvido"**.
 
-#### Fluxo do AuthService.login()
+Desta forma foi criado o login geral, onde após realização do login (do paciente ou funcionário ou Admin) já entra no dashboard/página principal, onde apresentará, para cada um:
 
-```
-CPF + Senha
-    ↓
-1. Busca em funcionario WHERE cpf = ? AND ativo = true
-2. Se encontrar → valida senha BCrypt
-3. Se não encontrar → busca em paciente WHERE cpf = ? AND ativo = true
-4. Se não encontrar em nenhum → BadCredentialsException
-    ↓
-Gera JWT com: sub=CPF, role=ROLE_*, userId, nome
-```
+* Pacientes
+  - Acesso ao seu perfil, podendo atualizar seus dados
+  - Criar e cancelar um novo agendamento, seguindo as regras impostas
+  - Visualizar todos os agendamentos
+  
+* Funcionários
+  - Visualizar todos os agendamentos futuros e programados para todos os médicos (profissionais)
+  - Criar e cancelar um agendamento para um paciente já cadastrado
+  
+* Admin
+  - Além de todas as funcionlidades dos anteriores, apenas o Admin pode cadastrar funcionário.
 
-**Por que funcionário primeiro?** Para que um CPF cadastrado como funcionário/admin não possa fazer login com a role de paciente caso exista nas duas tabelas.
 
-#### Conteúdo do Token JWT
-```json
-{
-  "sub": "000.000.000-01",
-  "role": "ROLE_ADMIN",
-  "userId": 1,
-  "nome": "Administrador",
-  "iat": 1700000000,
-  "exp": 1700086400
-}
-```
-
-#### JwtAuthFilter
-Intercepta todas as requisições, extrai o token do header `Authorization: Bearer <token>` e injeta um `UsuarioAutenticado` no `SecurityContext` — sem consultar o banco a cada request (stateless puro).
-
-```java
-// Principal injetado nos controllers via @AuthenticationPrincipal
-public record UsuarioAutenticado(String cpf, Long userId, String role) {
-    public boolean isAdmin()       { return "ROLE_ADMIN".equals(role); }
-    public boolean isFuncionario() { return "ROLE_FUNCIONARIO".equals(role) || isAdmin(); }
-    public boolean isPaciente()    { return "ROLE_PACIENTE".equals(role); }
-}
-```
-
-#### Autorização
-
-Configurada em duas camadas:
-
-**SecurityConfig (nível de rota):**
-```java
-.requestMatchers(HttpMethod.POST, "/funcionarios").hasRole("ADMIN")
-.requestMatchers(HttpMethod.GET,  "/agendamentos").hasAnyRole("FUNCIONARIO", "ADMIN")
-.requestMatchers(HttpMethod.POST, "/pacientes").permitAll()
-```
-
-**Nos Services (nível de recurso):**
-```java
-// Paciente só pode ver/editar o próprio agendamento
-if (usuario.isPaciente() && !agendamento.getPaciente().getCpf().equals(usuario.getCpf()))
-    throw new AcessoNegadoException("...");
-```
-
-Esta separação permite que regras de negócio finas (ex: paciente só acessa próprio recurso) sejam aplicadas mesmo quando o Spring Security já aprovou a requisição pela role.
-
-#### Senhas
-- Algoritmo BCrypt, **força 12** (recomendação OWASP para sistemas de saúde)
-- Nunca armazenadas em plaintext; o DataSeeder hasheia em runtime
-- Validação: ≥10 chars, 1 maiúscula, 1 minúscula, 1 número, 1 especial (`@ValidSenha`)
+No README apresento com mais informação.
 
 ---
 
-## 3. Quais foram os principais desafios técnicos e como você os resolveu?
+## 3. Quais foram os principais desafios técnicos e como você os resolveu? Se utilizou IA, em quais partes e como validou o resultado.
 
-### Principal: 
+### Principal: Desenvolvimento em JAVA
+
+**Problema:** Por ser a primeira vez que tento realmente desenvolver algo completo, utilizando JAVA.
+
+**Solução:** Muito tempo pesquisando tutorias e consultas com IA (Claude e ChatGPT).
 
 ### Desafio 1: Regras de conflito com cancelamento/reagendamento
 
@@ -172,6 +129,13 @@ Jwts.parser()
 **Problema:** Spring Security espera uma única `UserDetailsService` que retorna `UserDetails`. Mas o sistema tem dois domínios de usuário em tabelas distintas.
 
 **Solução:** Em vez de tentar encaixar no modelo padrão do Spring Security (que exigiria uma tabela unificada ou view), optei por **não usar UserDetailsService**. O `AuthService` faz a verificação manualmente com `PasswordEncoder.matches()`, gera o JWT e retorna o token. O `JwtAuthFilter` popula o contexto a partir do JWT sem consultar o banco. Isso elimina a complexidade, mantém a solução stateless e evita acoplamento desnecessário com a abstração do Spring.
+
+
+### Desafio 5: Utilização de IA
+
+Sim, foi utilizado muita IA. Mesmo com pesquisas, o tempo ficou curto para entender o JAVA e seu funcionamento e até coniguração de minha máquina para conseguir trabalhar. Então utilizei desde ajuda para configuração, desenvolvimento e execução.
+
+Após as criações eu tentava analisar e fazer as modificações, para tentar chegar ao que eu queria, ou o teste pedia. Sem utilizr a IA, com certeza naõ conseguiria concluir essa parte que foi feita.
 
 ---
 
